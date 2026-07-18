@@ -6,11 +6,11 @@ separate from the ComfyUI-on-Colab engine so image models, licenses, catalogs,
 and optimizations can evolve on their own release cadence.
 
 > Development staging status: the source, manifest, hooks, and offline contract
-> suite are complete, but the v1 manifest does not yet contain normalized
-> main-environment Python requirements from the pinned ComfyUI-GGUF checkout.
-> Core correctly refuses to auto-discover an undeclared `requirements.txt`.
-> Add those resolved requirements to `environments` before publishing a
-> runtime-installable release.
+> suite are complete. The v1 manifest explicitly directs the generic core
+> runtime to install `requirements.txt` from the pinned ComfyUI-GGUF checkout.
+> A runtime-installable release still requires an immutable daughter commit in
+> the official core registry, an exact generated lock, and a clean live Colab
+> install, startup, and inference run against that lock.
 
 The first modular release preserves the legacy internal node-root name
 `custom_nodes/ComfyColab-ZImage` and all existing public node IDs:
@@ -28,9 +28,9 @@ ComfyUI-GGUF dependency. Krea 2 uses ComfyUI's native FP8 loader.
 
 ## Installation after publication
 
-After the normalized requirements blocker above is resolved and an immutable
-daughter commit is added to the official core registry, the supported
-installation path will be:
+After an immutable daughter commit is added to the official core registry and
+the resulting lock passes live validation, the supported installation path
+will be:
 
 ```bash
 comfycolab start --pack image

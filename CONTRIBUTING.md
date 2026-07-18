@@ -62,11 +62,12 @@ describe local checks as live-runtime proof.
 
 ## Current release blocker
 
-`0.1.0-dev1` intentionally has an empty `environments` array. Before publishing
-a runtime-installable version, normalize the Python requirements from the pinned
-ComfyUI-GGUF checkout into the main environment, resolve them through core,
-generate a new lock, and run the live validation above. Do not work around this
-gate by adding an imperative `pip install -r` path to a hook or node.
+`0.1.0-dev1` now declares the pinned ComfyUI-GGUF checkout's
+`requirements.txt` on its Git dependency, so the generic core runtime owns that
+installation. Before publishing a runtime-installable version, publish and
+register an immutable daughter commit, generate a new lock, and run the live
+validation above. Do not add a second imperative `pip install -r` path to a hook
+or node.
 
 ## Pull-request checklist
 

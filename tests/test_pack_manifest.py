@@ -95,6 +95,13 @@ class PackManifestTests(unittest.TestCase):
     def test_dependency_and_node_inventory_are_immutable(self) -> None:
         dependencies = self.manifest["dependencies"]
         self.assertEqual([item["id"] for item in dependencies], ["comfyui-gguf"])
+        expected_sources = {
+            "comfyui-gguf": {
+                "repository": "https://github.com/city96/ComfyUI-GGUF.git",
+                "ref": "6ea2651e7df66d7585f6ffee804b20e92fb38b8a",
+                "requirements_file": "requirements.txt",
+            }
+        }
         for dependency in dependencies:
             self.assertEqual(dependency["kind"], "git")
             self.assertEqual(dependency["scope"], "comfyui")
@@ -102,6 +109,13 @@ class PackManifestTests(unittest.TestCase):
             self.assertTrue(dependency["repository"].endswith(".git"))
             self.assertRegex(dependency["ref"], IMMUTABLE_REF)
             self.assertTrue(safe_relative_path(dependency["destination"]))
+            self.assertEqual(
+                {
+                    key: dependency[key]
+                    for key in expected_sources[dependency["id"]]
+                },
+                expected_sources[dependency["id"]],
+            )
 
         self.assertEqual(
             self.manifest["health_checks"]["node_ids"],

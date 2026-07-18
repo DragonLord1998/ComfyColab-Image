@@ -8,10 +8,14 @@ otherwise.
 
 ## Unreleased
 
+### Changed
+
+- Declared the pinned ComfyUI-GGUF checkout's own `requirements.txt` for
+  dependency-owned installation by the generic core runtime.
+
 ### Required before the first runtime-installable release
 
-- Resolve the pinned ComfyUI-GGUF checkout's Python requirements into the
-  manifest's main `environments` declaration.
+- Publish an immutable daughter commit and add it to the official core registry.
 - Generate an exact ComfyColab lock and complete a live Colab smoke run against
   that lock.
 - Record accelerator, peak-memory, startup, inference, and representative
@@ -30,9 +34,5 @@ otherwise.
 
 ### Known limitations
 
-- The pack manifest does not yet declare normalized main-environment Python
-  requirements from the pinned ComfyUI-GGUF checkout. ComfyColab must not infer
-  or install an undeclared upstream `requirements.txt`; this development version
-  is therefore not a runtime-installable release.
 - Local validation does not prove live GPU inference, memory fit, runtime, or
   output quality in Colab.
