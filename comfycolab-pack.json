@@ -1,0 +1,139 @@
+{
+  "schema": 1,
+  "id": "image",
+  "version": "0.1.0-dev1",
+  "display_name": "ComfyColab Image",
+  "compatibility": {
+    "core_manifest_api": 1,
+    "comfyui": {
+      "compatible_refs": [
+        "8b099de36acd81acd1afa3b5442951dc847e0a52"
+      ],
+      "tested_refs": [
+        "8b099de36acd81acd1afa3b5442951dc847e0a52"
+      ]
+    }
+  },
+  "node_roots": [
+    {
+      "source": "custom_nodes/ComfyColab-ZImage",
+      "target": "ComfyColab-ZImage"
+    }
+  ],
+  "dependencies": [
+    {
+      "kind": "git",
+      "id": "comfyui-gguf",
+      "repository": "https://github.com/city96/ComfyUI-GGUF.git",
+      "ref": "6ea2651e7df66d7585f6ffee804b20e92fb38b8a",
+      "destination": "custom_nodes/ComfyUI-GGUF",
+      "scope": "comfyui"
+    }
+  ],
+  "patches": [],
+  "environments": [],
+  "hooks": {
+    "configure": {
+      "path": "runtime/configure.py",
+      "network": "none",
+      "write_roots": [
+        "pack_state"
+      ],
+      "timeout_seconds": 30
+    },
+    "doctor": {
+      "path": "runtime/doctor.py",
+      "network": "none",
+      "write_roots": [],
+      "timeout_seconds": 30
+    },
+    "runtime_env": {
+      "path": "runtime/runtime_env.py",
+      "network": "none",
+      "write_roots": [],
+      "timeout_seconds": 30
+    }
+  },
+  "runtime_env": {},
+  "workflows": [],
+  "probes": [
+    {
+      "phase": "post_clone",
+      "type": "path_exists",
+      "path": "custom_nodes/ComfyColab-ZImage/__init__.py"
+    },
+    {
+      "phase": "post_start",
+      "type": "comfy_node_ids",
+      "values": [
+        "ComfyColabZImageTurboBundleLoader",
+        "ComfyColabQwenImageEdit2511BundleLoader",
+        "ComfyColabKrea2BundleLoader",
+        "ComfyColabFlux2Klein4BBundleLoader",
+        "ComfyColabFlux2Klein9BBundleLoader",
+        "ComfyColabFlux2DevBundleLoader"
+      ]
+    }
+  ],
+  "health_checks": {
+    "node_ids": [
+      "ComfyColabZImageTurboBundleLoader",
+      "ComfyColabQwenImageEdit2511BundleLoader",
+      "ComfyColabKrea2BundleLoader",
+      "ComfyColabFlux2Klein4BBundleLoader",
+      "ComfyColabFlux2Klein9BBundleLoader",
+      "ComfyColabFlux2DevBundleLoader"
+    ]
+  },
+  "licenses": [
+    {
+      "id": "comfyui-gguf",
+      "name": "Apache-2.0",
+      "url": "https://github.com/city96/ComfyUI-GGUF/blob/6ea2651e7df66d7585f6ffee804b20e92fb38b8a/LICENSE",
+      "notice": "THIRD_PARTY_NOTICES.md",
+      "scope": "code"
+    },
+    {
+      "id": "z-image-turbo",
+      "name": "Upstream model terms",
+      "url": "https://huggingface.co/Comfy-Org/z_image_turbo",
+      "notice": "THIRD_PARTY_NOTICES.md",
+      "scope": "model"
+    },
+    {
+      "id": "qwen-image-edit-2511",
+      "name": "Upstream model terms",
+      "url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI",
+      "notice": "THIRD_PARTY_NOTICES.md",
+      "scope": "model"
+    },
+    {
+      "id": "krea-2",
+      "name": "Comfy-Org Krea-2 community license",
+      "url": "https://huggingface.co/Comfy-Org/Krea-2",
+      "notice": "THIRD_PARTY_NOTICES.md",
+      "scope": "model"
+    },
+    {
+      "id": "flux-2-klein-4b",
+      "name": "Apache-2.0",
+      "url": "https://huggingface.co/unsloth/FLUX.2-klein-4B-GGUF",
+      "notice": "THIRD_PARTY_NOTICES.md",
+      "scope": "model"
+    },
+    {
+      "id": "flux-2-klein-9b",
+      "name": "FLUX Non-Commercial License",
+      "url": "https://huggingface.co/unsloth/FLUX.2-klein-9B-GGUF",
+      "notice": "THIRD_PARTY_NOTICES.md",
+      "scope": "model"
+    },
+    {
+      "id": "flux-2-dev",
+      "name": "FLUX Non-Commercial License",
+      "url": "https://huggingface.co/Comfy-Org/flux2-dev",
+      "notice": "THIRD_PARTY_NOTICES.md",
+      "scope": "model"
+    }
+  ]
+}
