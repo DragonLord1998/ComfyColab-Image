@@ -49,3 +49,16 @@ derivative artifacts and do not replace the source-model terms.
 
 Every artifact URL, revision, size, and SHA-256 used by the pack is recorded in
 the corresponding JSON catalog.
+
+## Microsoft Mage-Flow
+
+- Source: <https://github.com/microsoft/Mage>
+- Pinned source revision: `1c4727a6daea1200488d9c68544ebea2e784c765`
+- Models: `microsoft/Mage-Flow`, `microsoft/Mage-Flow-Turbo`,
+  `microsoft/Mage-Flow-Edit`, and `microsoft/Mage-Flow-Edit-Turbo`
+- Declared source and model license: MIT
+
+The ComfyColab worker uses the four inference checkpoints only. It deliberately
+bypasses the upstream prompt/image screening and Gaussian-Shading watermark,
+uses ordinary seeded Gaussian noise, and exposes no controls for those removed
+features.

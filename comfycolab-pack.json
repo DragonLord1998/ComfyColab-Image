@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "image",
-  "version": "0.1.0-dev1",
+  "version": "0.2.0-dev1",
   "display_name": "ComfyColab Image",
   "compatibility": {
     "core_manifest_api": 1,
@@ -18,6 +18,10 @@
     {
       "source": "custom_nodes/ComfyColab-ZImage",
       "target": "ComfyColab-ZImage"
+    },
+    {
+      "source": "custom_nodes/ComfyColab-MageFlow",
+      "target": "ComfyColab-MageFlow"
     }
   ],
   "dependencies": [
@@ -29,6 +33,51 @@
       "destination": "custom_nodes/ComfyUI-GGUF",
       "scope": "comfyui",
       "requirements_file": "requirements.txt"
+    },
+    {
+      "kind": "git",
+      "id": "mage-flow-source",
+      "repository": "https://github.com/microsoft/Mage.git",
+      "ref": "1c4727a6daea1200488d9c68544ebea2e784c765",
+      "destination": "sources/Mage",
+      "scope": "isolated",
+      "install_phase": "bootstrap"
+    },
+    {
+      "kind": "huggingface",
+      "id": "mage-flow-model",
+      "repository": "microsoft/Mage-Flow",
+      "ref": "d272c957b204b92040be6e6edfac8912823a0e15",
+      "destination": "models/image/mage-flow",
+      "scope": "mage-flow-worker",
+      "install_phase": "lazy"
+    },
+    {
+      "kind": "huggingface",
+      "id": "mage-flow-turbo-model",
+      "repository": "microsoft/Mage-Flow-Turbo",
+      "ref": "09ecbcc42576c88b25c7c160fc57b3ec412ecb60",
+      "destination": "models/image/mage-flow-turbo",
+      "scope": "mage-flow-worker",
+      "install_phase": "lazy"
+    },
+    {
+      "kind": "huggingface",
+      "id": "mage-flow-edit-model",
+      "repository": "microsoft/Mage-Flow-Edit",
+      "ref": "79de4e0869566c20960ffa1c9ac8154a840f6eca",
+      "destination": "models/image/mage-flow-edit",
+      "scope": "mage-flow-worker",
+      "install_phase": "lazy"
+    },
+    {
+      "kind": "huggingface",
+      "id": "mage-flow-edit-turbo-model",
+      "repository": "microsoft/Mage-Flow-Edit-Turbo",
+      "ref": "286ac4b5429ab803e63073c79c10c9a205793c86",
+      "destination": "models/image/mage-flow-edit-turbo",
+      "scope": "mage-flow-worker",
+      "install_phase": "lazy"
     }
   ],
   "patches": [],
@@ -56,7 +105,12 @@
     }
   },
   "runtime_env": {},
-  "workflows": [],
+  "workflows": [
+    "workflows/comfycolab_mageflow.json",
+    "workflows/comfycolab_mageflow_turbo.json",
+    "workflows/comfycolab_mageflow_edit.json",
+    "workflows/comfycolab_mageflow_edit_turbo.json"
+  ],
   "probes": [
     {
       "phase": "post_clone",
@@ -72,7 +126,11 @@
         "ComfyColabKrea2BundleLoader",
         "ComfyColabFlux2Klein4BBundleLoader",
         "ComfyColabFlux2Klein9BBundleLoader",
-        "ComfyColabFlux2DevBundleLoader"
+        "ComfyColabFlux2DevBundleLoader",
+        "ComfyColabMageFlow",
+        "ComfyColabMageFlowTurbo",
+        "ComfyColabMageFlowEdit",
+        "ComfyColabMageFlowEditTurbo"
       ]
     }
   ],
@@ -83,7 +141,11 @@
       "ComfyColabKrea2BundleLoader",
       "ComfyColabFlux2Klein4BBundleLoader",
       "ComfyColabFlux2Klein9BBundleLoader",
-      "ComfyColabFlux2DevBundleLoader"
+      "ComfyColabFlux2DevBundleLoader",
+      "ComfyColabMageFlow",
+      "ComfyColabMageFlowTurbo",
+      "ComfyColabMageFlowEdit",
+      "ComfyColabMageFlowEditTurbo"
     ]
   },
   "licenses": [
@@ -133,6 +195,20 @@
       "id": "flux-2-dev",
       "name": "FLUX Non-Commercial License",
       "url": "https://huggingface.co/Comfy-Org/flux2-dev",
+      "notice": "THIRD_PARTY_NOTICES.md",
+      "scope": "model"
+    },
+    {
+      "id": "mage-flow-code",
+      "name": "MIT",
+      "url": "https://github.com/microsoft/Mage/blob/1c4727a6daea1200488d9c68544ebea2e784c765/LICENSE",
+      "notice": "THIRD_PARTY_NOTICES.md",
+      "scope": "code"
+    },
+    {
+      "id": "mage-flow-models",
+      "name": "MIT",
+      "url": "https://huggingface.co/microsoft/Mage-Flow",
       "notice": "THIRD_PARTY_NOTICES.md",
       "scope": "model"
     }

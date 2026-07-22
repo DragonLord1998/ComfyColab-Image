@@ -36,6 +36,19 @@ EXPECTED_NODE_IDS = [
     "ComfyColabFlux2Klein4BBundleLoader",
     "ComfyColabFlux2Klein9BBundleLoader",
     "ComfyColabFlux2DevBundleLoader",
+    "ComfyColabMageFlow",
+    "ComfyColabMageFlowTurbo",
+    "ComfyColabMageFlowEdit",
+    "ComfyColabMageFlowEditTurbo",
+]
+
+EXPECTED_DEPENDENCY_IDS = [
+    "comfyui-gguf",
+    "mage-flow-source",
+    "mage-flow-model",
+    "mage-flow-turbo-model",
+    "mage-flow-edit-model",
+    "mage-flow-edit-turbo-model",
 ]
 
 
@@ -53,7 +66,7 @@ class PackManifestTests(unittest.TestCase):
         self.assertEqual(set(self.manifest), EXPECTED_TOP_LEVEL)
         self.assertEqual(self.manifest["schema"], 1)
         self.assertEqual(self.manifest["id"], "image")
-        self.assertEqual(self.manifest["version"], "0.1.0-dev1")
+        self.assertEqual(self.manifest["version"], "0.2.0-dev1")
         self.assertEqual(
             self.manifest["compatibility"]["core_manifest_api"],
             1,
@@ -94,7 +107,7 @@ class PackManifestTests(unittest.TestCase):
 
     def test_dependency_and_node_inventory_are_immutable(self) -> None:
         dependencies = self.manifest["dependencies"]
-        self.assertEqual([item["id"] for item in dependencies], ["comfyui-gguf"])
+        self.assertEqual([item["id"] for item in dependencies], EXPECTED_DEPENDENCY_IDS)
         expected_sources = {
             "comfyui-gguf": {
                 "repository": "https://github.com/city96/ComfyUI-GGUF.git",
@@ -103,19 +116,29 @@ class PackManifestTests(unittest.TestCase):
             }
         }
         for dependency in dependencies:
-            self.assertEqual(dependency["kind"], "git")
-            self.assertEqual(dependency["scope"], "comfyui")
-            self.assertTrue(dependency["repository"].startswith("https://"))
-            self.assertTrue(dependency["repository"].endswith(".git"))
             self.assertRegex(dependency["ref"], IMMUTABLE_REF)
             self.assertTrue(safe_relative_path(dependency["destination"]))
-            self.assertEqual(
-                {
-                    key: dependency[key]
-                    for key in expected_sources[dependency["id"]]
-                },
-                expected_sources[dependency["id"]],
-            )
+            if dependency["kind"] == "git":
+                self.assertTrue(dependency["repository"].startswith("https://"))
+                self.assertTrue(dependency["repository"].endswith(".git"))
+                if dependency["id"] == "comfyui-gguf":
+                    self.assertEqual(dependency["scope"], "comfyui")
+                    self.assertEqual(
+                        {
+                            key: dependency[key]
+                            for key in expected_sources[dependency["id"]]
+                        },
+                        expected_sources[dependency["id"]],
+                    )
+                else:
+                    self.assertEqual(dependency["id"], "mage-flow-source")
+                    self.assertEqual(dependency["scope"], "isolated")
+                    self.assertEqual(dependency["install_phase"], "bootstrap")
+            else:
+                self.assertEqual(dependency["kind"], "huggingface")
+                self.assertRegex(dependency["repository"], r"^[^/]+/[^/]+$")
+                self.assertEqual(dependency["scope"], "mage-flow-worker")
+                self.assertEqual(dependency["install_phase"], "lazy")
 
         self.assertEqual(
             self.manifest["health_checks"]["node_ids"],

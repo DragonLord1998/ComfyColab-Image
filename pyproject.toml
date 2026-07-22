@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "comfycolab-image-pack"
-version = "0.1.0-dev1"
-description = "Optional checksum-pinned image model bundle nodes for ComfyColab."
+version = "0.2.0-dev1"
+description = "Optional checksum-pinned image generation and editing nodes for ComfyColab."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }

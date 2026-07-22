@@ -8,6 +8,14 @@ otherwise.
 
 ## Unreleased
 
+### Added
+
+- Added four Mage-Flow generation/editing facades and revision-pinned upstream
+  source/model declarations.
+- Added example workflows and an isolated persistent inference worker.
+- Removed upstream prompt/image screening and Gaussian-Shading watermarking
+  from this personal-project integration; generation uses seeded Gaussian noise.
+
 ### Changed
 
 - Declared the pinned ComfyUI-GGUF checkout's own `requirements.txt` for

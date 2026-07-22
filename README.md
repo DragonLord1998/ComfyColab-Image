@@ -26,6 +26,20 @@ Each node returns standard ComfyUI `MODEL`, `CLIP`, and `VAE` outputs.
 Z-Image, Qwen Image Edit, and FLUX.2 use the manifest-declared, immutable
 ComfyUI-GGUF dependency. Krea 2 uses ComfyUI's native FP8 loader.
 
+The pack also adds exactly four direct Mage-Flow image nodes:
+
+- `ComfyColabMageFlow`
+- `ComfyColabMageFlowTurbo`
+- `ComfyColabMageFlowEdit`
+- `ComfyColabMageFlowEditTurbo`
+
+They run revision-pinned Microsoft Mage-Flow models in an isolated persistent
+worker and return a standard ComfyUI `IMAGE`. This personal-project integration
+does not run prompt/image screening and does not expose a screening toggle. It
+also removes Gaussian-Shading watermark generation; `seed` controls ordinary
+deterministic Gaussian noise. No Base Mage-Flow nodes are registered. See
+[`docs/mageflow.md`](docs/mageflow.md) for inputs and example workflows.
+
 ## Installation after publication
 
 After an immutable daughter commit is added to the official core registry and
@@ -37,8 +51,8 @@ comfycolab start --pack image
 ```
 
 The resolver verifies `comfycolab-pack.json`, resolves the exact dependency
-revision, and links `custom_nodes/ComfyColab-ZImage` into ComfyUI. The pack does
-not need to be installed as a Python dependency. During development, core
+revisions, and links both Image node roots into ComfyUI. The pack does not need
+to be installed as a Python dependency. During development, core
 integration uses an explicit authenticated `--pack-ref` file rather than the
 currently unpublished `image` alias.
 
@@ -63,6 +77,6 @@ command is an explicit network check of pinned Hugging Face sizes and hashes.
 Neither command proves live GPU inference or output quality; that requires a
 separate Colab smoke run.
 
-No image example workflow existed at the extraction baseline. The loader
-contracts remain covered by parameterized tests until representative workflows
-are added without changing the preserved node APIs.
+Four Mage-Flow example workflows are included under `workflows/`. Local tests
+cover their graph contracts, but live GPU inference remains a separate release
+gate.
