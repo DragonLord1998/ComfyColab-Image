@@ -22,6 +22,10 @@
     {
       "source": "custom_nodes/ComfyColab-MageFlow",
       "target": "ComfyColab-MageFlow"
+    },
+    {
+      "source": "custom_nodes/ComfyColab-PiD",
+      "target": "ComfyColab-PiD"
     }
   ],
   "dependencies": [
@@ -109,13 +113,19 @@
     "workflows/comfycolab_mageflow.json",
     "workflows/comfycolab_mageflow_turbo.json",
     "workflows/comfycolab_mageflow_edit.json",
-    "workflows/comfycolab_mageflow_edit_turbo.json"
+    "workflows/comfycolab_mageflow_edit_turbo.json",
+    "workflows/comfycolab_pid_upscale.json"
   ],
   "probes": [
     {
       "phase": "post_clone",
       "type": "path_exists",
       "path": "custom_nodes/ComfyColab-ZImage/__init__.py"
+    },
+    {
+      "phase": "post_clone",
+      "type": "path_exists",
+      "path": "custom_nodes/ComfyColab-PiD/__init__.py"
     },
     {
       "phase": "post_start",
@@ -130,7 +140,8 @@
         "ComfyColabMageFlow",
         "ComfyColabMageFlowTurbo",
         "ComfyColabMageFlowEdit",
-        "ComfyColabMageFlowEditTurbo"
+        "ComfyColabMageFlowEditTurbo",
+        "ComfyColabPiDUpscale"
       ]
     }
   ],
@@ -145,7 +156,8 @@
       "ComfyColabMageFlow",
       "ComfyColabMageFlowTurbo",
       "ComfyColabMageFlowEdit",
-      "ComfyColabMageFlowEditTurbo"
+      "ComfyColabMageFlowEditTurbo",
+      "ComfyColabPiDUpscale"
     ]
   },
   "licenses": [
@@ -209,6 +221,20 @@
       "id": "mage-flow-models",
       "name": "MIT",
       "url": "https://huggingface.co/microsoft/Mage-Flow",
+      "notice": "THIRD_PARTY_NOTICES.md",
+      "scope": "model"
+    },
+    {
+      "id": "nvidia-pid-code",
+      "name": "Apache-2.0",
+      "url": "https://github.com/nv-tlabs/PiD",
+      "notice": "THIRD_PARTY_NOTICES.md",
+      "scope": "code"
+    },
+    {
+      "id": "nvidia-pid-models",
+      "name": "NVIDIA Source Code License V1",
+      "url": "https://huggingface.co/Comfy-Org/PixelDiT/blob/main/LICENSE",
       "notice": "THIRD_PARTY_NOTICES.md",
       "scope": "model"
     }

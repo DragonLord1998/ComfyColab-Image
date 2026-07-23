@@ -40,6 +40,7 @@ EXPECTED_NODE_IDS = [
     "ComfyColabMageFlowTurbo",
     "ComfyColabMageFlowEdit",
     "ComfyColabMageFlowEditTurbo",
+    "ComfyColabPiDUpscale",
 ]
 
 EXPECTED_DEPENDENCY_IDS = [

@@ -40,6 +40,17 @@ also removes Gaussian-Shading watermark generation; `seed` controls ordinary
 deterministic Gaussian noise. No Base Mage-Flow nodes are registered. See
 [`docs/mageflow.md`](docs/mageflow.md) for inputs and example workflows.
 
+The pack also provides one NVIDIA PiD facade:
+
+- `ComfyColabPiDUpscale`
+
+It accepts any ComfyUI image, lets the user choose a matched FLUX.1, FLUX.2,
+or Qwen Image VAE family, and returns a native 4x PiD upscale. Experimental
+16x mode cascades two 4x passes and uses tiled VAE encoding plus overlapped
+context-window sampling on the second pass. See
+[`docs/pid-upscaler.md`](docs/pid-upscaler.md); the NVIDIA noncommercial model
+license must be explicitly accepted in the node before assets are downloaded.
+
 ## Installation after publication
 
 After an immutable daughter commit is added to the official core registry and
@@ -77,6 +88,6 @@ command is an explicit network check of pinned Hugging Face sizes and hashes.
 Neither command proves live GPU inference or output quality; that requires a
 separate Colab smoke run.
 
-Four Mage-Flow example workflows are included under `workflows/`. Local tests
-cover their graph contracts, but live GPU inference remains a separate release
-gate.
+Four Mage-Flow workflows and one PiD upscaler workflow are included under
+`workflows/`. Local tests cover their graph contracts, but live GPU inference
+remains a separate release gate.

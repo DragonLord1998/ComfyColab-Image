@@ -62,3 +62,15 @@ The ComfyColab worker uses the four inference checkpoints only. It deliberately
 bypasses the upstream prompt/image screening and Gaussian-Shading watermark,
 uses ordinary seeded Gaussian noise, and exposes no controls for those removed
 features.
+
+## NVIDIA PiD
+
+- Upstream code: <https://github.com/nv-tlabs/PiD>
+- ComfyUI-repackaged weights: <https://huggingface.co/Comfy-Org/PixelDiT>
+- Code license: Apache-2.0
+- Model license: NVIDIA Source Code License V1 (`NSCLv1`)
+
+The PiD facade downloads a matched decoder, PixelDiT text encoder, and VAE
+only after `accept_nvidia_noncommercial_license` is enabled. Review the model
+license before accepting it. ComfyColab does not grant commercial rights or
+alter the upstream restrictions.
