@@ -34,7 +34,12 @@ The pack also adds exactly four direct Mage-Flow image nodes:
 - `ComfyColabMageFlowEditTurbo`
 
 They run revision-pinned Microsoft Mage-Flow models in an isolated persistent
-worker and return a standard ComfyUI `IMAGE`. This personal-project integration
+worker and return `IMAGE`, `MODEL`, `CLIP`, and `VAE`. Connect the component
+outputs to `CLIP Text Encode`, a sampler of your choice, and `VAE Decode`; use
+the included 128-channel, 16x Mage empty latent node for text-to-image. Edit
+models retain their connected source image as sampler reference conditioning,
+and the exported VAE preserves batches and supports tiled encode/decode.
+This personal-project integration
 does not run prompt/image screening and does not expose a screening toggle. It
 also removes Gaussian-Shading watermark generation; `seed` controls ordinary
 deterministic Gaussian noise. No Base Mage-Flow nodes are registered. See
@@ -45,9 +50,10 @@ The pack also provides one NVIDIA PiD facade:
 - `ComfyColabPiDUpscale`
 
 It accepts any ComfyUI image, lets the user choose a matched FLUX.1, FLUX.2,
-or Qwen Image VAE family, and returns a native 4x PiD upscale. Experimental
-16x mode cascades two 4x passes and uses tiled VAE encoding plus overlapped
-context-window sampling on the second pass. See
+or Qwen Image VAE family, and returns a native 4x PiD upscale. It also exposes
+an experimental Mage-VAE bridge through the FLUX.2 PiD checkpoint.
+Experimental 16x mode cascades two 4x passes and uses tiled VAE encoding plus
+overlapped context-window sampling on the second pass. See
 [`docs/pid-upscaler.md`](docs/pid-upscaler.md); the NVIDIA noncommercial model
 license must be explicitly accepted in the node before assets are downloaded.
 

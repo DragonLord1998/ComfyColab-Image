@@ -58,10 +58,11 @@ the corresponding JSON catalog.
   `microsoft/Mage-Flow-Edit`, and `microsoft/Mage-Flow-Edit-Turbo`
 - Declared source and model license: MIT
 
-The ComfyColab worker uses the four inference checkpoints only. It deliberately
-bypasses the upstream prompt/image screening and Gaussian-Shading watermark,
-uses ordinary seeded Gaussian noise, and exposes no controls for those removed
-features.
+The ComfyColab worker uses the four inference checkpoints and the Mage-VAE
+weights bundled in `microsoft/Mage-Flow`. For Mage-Flow image generation it
+deliberately bypasses the upstream prompt/image screening and Gaussian-Shading
+watermark, uses ordinary seeded Gaussian noise, and exposes no controls for
+those removed features.
 
 ## NVIDIA PiD
 
@@ -70,7 +71,9 @@ features.
 - Code license: Apache-2.0
 - Model license: NVIDIA Source Code License V1 (`NSCLv1`)
 
-The PiD facade downloads a matched decoder, PixelDiT text encoder, and VAE
-only after `accept_nvidia_noncommercial_license` is enabled. Review the model
+The PiD facade downloads the selected decoder, PixelDiT text encoder, and VAE
+only after `accept_nvidia_noncommercial_license` is enabled. Standard selections
+are matched pairs; the clearly labeled experimental Mage-VAE selection uses the
+FLUX.2 PiD decoder without claiming an upstream-trained pair. Review the model
 license before accepting it. ComfyColab does not grant commercial rights or
 alter the upstream restrictions.
