@@ -1,4 +1,4 @@
-# Shared ComfyUI dependencies intentionally stay empty.
-#
+huggingface_hub[hf_xet]>=0.36.0,<1
+
 # Mage-Flow's incompatible versions are installed into a worker-only target by
 # install.py. ComfyUI-GGUF is installed as a sibling custom node.

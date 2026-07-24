@@ -27,7 +27,14 @@ MAGE_ARCHIVE_SHA256 = (
 )
 GGUF_REPOSITORY = "https://github.com/city96/ComfyUI-GGUF.git"
 GGUF_REF = "6ea2651e7df66d7585f6ffee804b20e92fb38b8a"
-MAGE_PACKAGE_MODULES = ("accelerate", "diffusers", "loguru", "transformers")
+MAGE_PACKAGE_MODULES = (
+    "accelerate",
+    "diffusers",
+    "huggingface_hub",
+    "hf_xet",
+    "loguru",
+    "transformers",
+)
 
 
 def _run(*argv: str, cwd: Path | None = None) -> None:

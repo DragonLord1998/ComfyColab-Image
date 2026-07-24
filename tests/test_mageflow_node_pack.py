@@ -511,6 +511,8 @@ class MageFlowNodePackTests(unittest.TestCase):
         self.assertIn("--target", argv)
         self.assertIn("transformers==5.5.0", argv)
         self.assertIn("loguru==0.7.3", argv)
+        self.assertIn("huggingface_hub[hf_xet]>=0.36.0,<1", argv)
+        self.assertIn("hf-xet>=1.1.0", argv)
 
     def test_standalone_paths_are_used_without_runtime_installation(self):
         _, nodes = self._modules()
@@ -520,7 +522,14 @@ class MageFlowNodePackTests(unittest.TestCase):
             packages = root / ".standalone" / "mage" / "python-packages"
             (source / "mage_flow").mkdir(parents=True)
             (source / "mage_flow" / "pipeline.py").write_text("# pinned\n")
-            for module in ("accelerate", "diffusers", "loguru", "transformers"):
+            for module in (
+                "accelerate",
+                "diffusers",
+                "huggingface_hub",
+                "hf_xet",
+                "loguru",
+                "transformers",
+            ):
                 (packages / module).mkdir(parents=True, exist_ok=True)
                 (packages / module / "__init__.py").write_text("")
 

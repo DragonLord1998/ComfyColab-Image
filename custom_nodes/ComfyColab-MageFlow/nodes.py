@@ -53,7 +53,12 @@ MAGE_FLOW_MODELS = {
         "default_guidance": 1.0,
     },
 }
-MAGE_FLOW_WORKER_REQUIREMENTS = ("transformers==5.5.0", "loguru==0.7.3")
+MAGE_FLOW_WORKER_REQUIREMENTS = (
+    "transformers==5.5.0",
+    "loguru==0.7.3",
+    "huggingface_hub[hf_xet]>=0.36.0,<1",
+    "hf-xet>=1.1.0",
+)
 _WORKER_DEPENDENCY_LOCK = threading.Lock()
 
 
@@ -121,7 +126,14 @@ def _worker_site_packages() -> str:
     )
     if all(
         (standalone_target / module / "__init__.py").is_file()
-        for module in ("accelerate", "diffusers", "loguru", "transformers")
+        for module in (
+            "accelerate",
+            "diffusers",
+            "huggingface_hub",
+            "hf_xet",
+            "loguru",
+            "transformers",
+        )
     ):
         return str(standalone_target)
 
