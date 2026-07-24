@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "image",
-  "version": "0.2.0-dev1",
+  "version": "0.3.0-dev1",
   "display_name": "ComfyColab Image",
   "compatibility": {
     "core_manifest_api": 1,

@@ -18,6 +18,8 @@ EXPECTED_NODE_IDS = (
     "ComfyColabMageFlowTurbo",
     "ComfyColabMageFlowEdit",
     "ComfyColabMageFlowEditTurbo",
+    "ComfyColabMageFlowEmptyLatent",
+    "ComfyColabPiDUpscale",
 )
 EXPECTED_CATALOGS = (
     "z_image_turbo.json",
@@ -33,14 +35,23 @@ def main() -> int:
     root = Path(__file__).resolve().parents[1]
     node_root = root / "custom_nodes" / "ComfyColab-ZImage"
     mage_root = root / "custom_nodes" / "ComfyColab-MageFlow"
+    pid_root = root / "custom_nodes" / "ComfyColab-PiD"
     source = "\n".join(
         path.read_text(encoding="utf-8")
-        for path in (node_root / "__init__.py", mage_root / "nodes.py")
+        for path in (
+            node_root / "__init__.py",
+            mage_root / "nodes.py",
+            pid_root / "nodes.py",
+        )
         if path.is_file()
     )
     checks = {
+        "standalone_entrypoint": (root / "__init__.py").is_file(),
+        "standalone_installer": (root / "install.py").is_file(),
+        "standalone_node_list": (root / "node_list.json").is_file(),
         "node_root": node_root.is_dir(),
         "mage_node_root": mage_root.is_dir(),
+        "pid_node_root": pid_root.is_dir(),
         "mage_worker": (root / "worker" / "mage_flow" / "worker_main.py").is_file(),
         "node_ids": all(node_id in source for node_id in EXPECTED_NODE_IDS),
         "catalogs": all(

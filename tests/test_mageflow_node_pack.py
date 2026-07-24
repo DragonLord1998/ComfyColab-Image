@@ -489,12 +489,15 @@ class MageFlowNodePackTests(unittest.TestCase):
         _, nodes = self._modules()
         with tempfile.TemporaryDirectory() as directory, mock.patch.object(
             nodes, "_runtime_root", return_value=Path(directory)
+        ), mock.patch.object(
+            nodes, "_repo_root", return_value=Path(directory) / "empty-repo"
         ), mock.patch.dict(
             nodes.os.environ,
             {
                 "COMFYCOLAB_MAGEFLOW_PYTHON": "",
                 "COMFYCOLAB_MAGE_FLOW_PYTHON": "",
                 "COMFYCOLAB_MAGEFLOW_SITE_PACKAGES": "",
+                "COMFYCOLAB_MAGEFLOW_SOURCE": "/managed/Mage",
             },
             clear=False,
         ), mock.patch.object(nodes.subprocess, "check_call") as install:
@@ -509,36 +512,49 @@ class MageFlowNodePackTests(unittest.TestCase):
         self.assertIn("transformers==5.5.0", argv)
         self.assertIn("loguru==0.7.3", argv)
 
-    def test_legacy_path_self_provisions_exact_mage_source_revision(self):
+    def test_standalone_paths_are_used_without_runtime_installation(self):
         _, nodes = self._modules()
         with tempfile.TemporaryDirectory() as directory:
-            runtime_root = Path(directory) / "runtime"
+            root = Path(directory) / "repo"
+            source = root / ".standalone" / "mage" / "source" / "Mage"
+            packages = root / ".standalone" / "mage" / "python-packages"
+            (source / "mage_flow").mkdir(parents=True)
+            (source / "mage_flow" / "pipeline.py").write_text("# pinned\n")
+            for module in ("accelerate", "diffusers", "loguru", "transformers"):
+                (packages / module).mkdir(parents=True, exist_ok=True)
+                (packages / module / "__init__.py").write_text("")
 
-            def fake_git(argv):
-                if argv[1] == "clone":
-                    target = Path(argv[-1])
-                    (target / ".git").mkdir(parents=True)
-                    (target / "mage_flow").mkdir()
-                    (target / "mage_flow" / "pipeline.py").write_text("# pinned\n")
-
-            with mock.patch.object(nodes, "_runtime_root", return_value=runtime_root), mock.patch.object(
-                nodes, "_repo_root", return_value=Path(directory) / "repo"
+            with mock.patch.object(
+                nodes, "_repo_root", return_value=root
             ), mock.patch.dict(
                 nodes.os.environ,
                 {"COMFYCOLAB_MAGEFLOW_SOURCE": "", "COMFYCOLAB_MAGE_FLOW_SOURCE_DIR": ""},
                 clear=False,
-            ), mock.patch.object(
-                nodes.subprocess, "check_call", side_effect=fake_git
-            ) as git, mock.patch.object(
-                nodes.subprocess,
-                "check_output",
-                return_value=nodes.MAGE_FLOW_SOURCE_REF + "\n",
-            ):
-                source = nodes._source_dir()
+            ), mock.patch.object(nodes.subprocess, "check_call") as install:
+                resolved_source = nodes._source_dir()
+                resolved_packages = nodes._worker_site_packages()
 
-        self.assertEqual(source, runtime_root / "source" / "Mage")
-        self.assertEqual(git.call_args_list[0].args[0][0:3], ["git", "clone", "--filter=blob:none"])
-        self.assertIn(nodes.MAGE_FLOW_SOURCE_REF, git.call_args_list[1].args[0])
+        self.assertEqual(resolved_source, source)
+        self.assertEqual(resolved_packages, str(packages))
+        install.assert_not_called()
+
+    def test_missing_standalone_install_has_actionable_error(self):
+        _, nodes = self._modules()
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(
+            nodes, "_repo_root", return_value=Path(directory) / "repo"
+        ), mock.patch.dict(
+            nodes.os.environ,
+            {
+                "COMFYCOLAB_MAGEFLOW_SOURCE": "",
+                "COMFYCOLAB_MAGE_FLOW_SOURCE_DIR": "",
+                "COMFYCOLAB_MAGEFLOW_SITE_PACKAGES": "",
+            },
+            clear=False,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "install.py"):
+                nodes._source_dir()
+            with self.assertRaisesRegex(RuntimeError, "install.py"):
+                nodes._worker_site_packages()
 
 
 if __name__ == "__main__":

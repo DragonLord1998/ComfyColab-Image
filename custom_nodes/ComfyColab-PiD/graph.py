@@ -28,7 +28,7 @@ REQUIRED_NODES = frozenset(
         "ManualSigmas",
         "SamplerCustom",
         "VAEDecode",
-        "ContextWindowsManual",
+        "ChromaRadianceOptions",
         "ImageScale",
     }
 )
@@ -123,20 +123,13 @@ def build_pid_graph(
     factor = 4
     if scale == "Experimental 16x (tiled)":
         tiled_model = graph.node(
-            "ContextWindowsManual",
+            "ChromaRadianceOptions",
             model=model.out(0),
-            context_length=tile_size,
-            context_overlap=tile_overlap,
-            context_schedule="standard_static",
-            context_stride=1,
-            closed_loop=False,
-            fuse_method="pyramid",
-            dim=2,
-            freenoise=False,
-            cond_retain_index_list="",
-            split_conds_to_windows=False,
-            latent_retain_index_list="",
-            causal_window_fix=True,
+            preserve_wrapper=True,
+            start_sigma=1.0,
+            end_sigma=0.0,
+            nerf_tile_size=tile_size,
+            force_sequential_txt_ids=False,
         )
         generated_width = first_width * 4
         generated_height = first_height * 4
@@ -157,7 +150,7 @@ def build_pid_graph(
             output_height=generated_height,
             seed=(seed + 1) % (2**63),
             degrade_sigma=degrade_sigma,
-            tiled_encode=True,
+            tiled_encode=False,
             tile_size=tile_size,
             tile_overlap=tile_overlap,
         )

@@ -18,18 +18,23 @@ an `IMAGE`.
 - `scale`: `4x` or `Experimental 16x (tiled)`.
 - `seed` and `degrade_sigma`: PiD sampling controls. Keep `degrade_sigma=0`
   for a clean source image.
-- `tile_size` and `tile_overlap`: advanced controls for the second PiD pass in
-  experimental 16x mode.
+- `tile_size`: controls the native `nerf_tile_size` used by PiD's Chroma
+  Radiance wrapper on the second pass in experimental 16x mode.
+- `tile_overlap`: controls overlap blending only for experimental Mage-VAE
+  encoding. It is not used by the standard FLUX/Qwen VAE paths.
 - `accept_nvidia_noncommercial_license`: must be enabled before the node
   downloads or runs the NVIDIA PiD weights.
 
 ## How 16x works
 
 PiD checkpoints are native 4x decoders. The experimental mode therefore
-cascades two 4x passes. The second pass uses ComfyUI context-window sampling
-with overlap and tiled VAE encoding to control peak VRAM. This is much slower
-than 4x, may create seams or invented detail, and can produce extremely large
-images. For example, a 512x512 input becomes 8192x8192.
+cascades two 4x passes. The second pass wraps the model with
+`ChromaRadianceOptions` and maps `tile_size` to its native `nerf_tile_size`.
+Standard FLUX/Qwen inputs use normal VAE encoding; this avoids the grid
+corruption observed with context-window sampling and tiled PixelDiT VAE
+encoding during live visual QA. The mode is much slower than 4x, may invent
+detail, and can produce extremely large images. For example, a 512x512 input
+becomes 8192x8192.
 
 Mage-VAE uses the same isolated worker as the Mage-Flow nodes. Its encoder runs
 on deterministic posterior means and uses overlap blending when the input to a

@@ -155,7 +155,7 @@ REQUIRED_NATIVE_NODES = {
     "ManualSigmas",
     "SamplerCustom",
     "VAEDecode",
-    "ContextWindowsManual",
+    "ChromaRadianceOptions",
     "ImageScale",
     "ComfyColabMageVAEEncode",
 }
@@ -341,7 +341,7 @@ class PiDNodePackTests(unittest.TestCase):
                     self.assertEqual(node_types.count("VAEEncodeTiled"), 0)
                     self.assertEqual(node_types.count("PiDConditioning"), 1)
                     self.assertEqual(node_types.count("SamplerCustom"), 1)
-                    self.assertEqual(node_types.count("ContextWindowsManual"), 0)
+                    self.assertEqual(node_types.count("ChromaRadianceOptions"), 0)
 
                     unet = next(item for item in expanded if item["class_type"] == "UNETLoader")
                     clip = next(item for item in expanded if item["class_type"] == "CLIPLoader")
@@ -427,17 +427,16 @@ class PiDNodePackTests(unittest.TestCase):
         node_types = [item["class_type"] for item in expanded]
         self.assertEqual(node_types.count("PiDConditioning"), 2)
         self.assertEqual(node_types.count("SamplerCustom"), 2)
-        self.assertEqual(node_types.count("VAEEncode"), 1)
-        self.assertEqual(node_types.count("VAEEncodeTiled"), 1)
-        context = next(
-            item for item in expanded if item["class_type"] == "ContextWindowsManual"
+        self.assertEqual(node_types.count("VAEEncode"), 2)
+        self.assertEqual(node_types.count("VAEEncodeTiled"), 0)
+        tiled_model = next(
+            item for item in expanded if item["class_type"] == "ChromaRadianceOptions"
         )
-        self.assertEqual(context["inputs"]["dim"], 2)
-        self.assertEqual(context["inputs"]["context_length"], 1536)
-        self.assertEqual(context["inputs"]["context_overlap"], 384)
-        self.assertEqual(context["inputs"]["context_schedule"], "standard_static")
-        self.assertEqual(context["inputs"]["fuse_method"], "pyramid")
-        self.assertFalse(context["inputs"]["freenoise"])
+        self.assertEqual(tiled_model["inputs"]["nerf_tile_size"], 1536)
+        self.assertTrue(tiled_model["inputs"]["preserve_wrapper"])
+        self.assertEqual(tiled_model["inputs"]["start_sigma"], 1.0)
+        self.assertEqual(tiled_model["inputs"]["end_sigma"], 0.0)
+        self.assertFalse(tiled_model["inputs"]["force_sequential_txt_ids"])
         latents = [
             item
             for item in expanded
@@ -447,12 +446,18 @@ class PiDNodePackTests(unittest.TestCase):
             [(item["inputs"]["width"], item["inputs"]["height"]) for item in latents],
             [(1024, 1536), (4096, 6144)],
         )
-        second_encode = next(
-            item for item in expanded if item["class_type"] == "VAEEncodeTiled"
-        )
-        self.assertEqual(second_encode["inputs"]["tile_size"], 1536)
-        self.assertEqual(second_encode["inputs"]["overlap"], 384)
 
+    def test_experimental_16x_rejects_sources_smaller_than_live_quality_floor(self):
+        _, nodes, graph, models = self._modules()
+        facade = nodes.NODE_CLASS_MAPPINGS[PUBLIC_NODE_ID]
+        with self._mock_model_downloads((nodes, graph, models)), self.assertRaisesRegex(
+            ValueError, "at least a 256x256 input"
+        ):
+            self._execute(
+                facade,
+                scale="Experimental 16x (tiled)",
+                image=FakeImage(width=255, height=256),
+            )
     def test_mage_vae_16x_uses_isolated_tiled_encoder_for_both_passes(self):
         _, nodes, graph, models = self._modules()
         facade = nodes.NODE_CLASS_MAPPINGS[PUBLIC_NODE_ID]

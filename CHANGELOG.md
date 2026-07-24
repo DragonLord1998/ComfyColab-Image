@@ -8,8 +8,21 @@ otherwise.
 
 ## Unreleased
 
+- Increased the isolated Mage worker startup allowance so first-run Hugging
+  Face snapshot downloads do not fail at the old three-minute readiness limit.
+- Replaced one-dimensional context-window slicing in experimental PiD 16x with
+  PiD's native Chroma Radiance NeRF-head tiling and a standard second-pass VAE
+  encode, eliminating severe grid/seam corruption from both incompatible
+  context slicing and the PixelDiT VAE's tiled encoder.
+- Added a 256x256 minimum for experimental 16x after live visual QA showed that
+  smaller sources compound generative artifacts across the two PiD passes.
+
 ### Added
 
+- Added a repository-root ComfyUI V3 entrypoint so the whole repository can be
+  cloned directly into `ComfyUI/custom_nodes/ComfyColab-Image`.
+- Added a Manager-compatible installer, explicit node inventory, worker-only
+  Mage dependency target, and standalone health checks.
 - Added four Mage-Flow generation/editing facades and revision-pinned upstream
   source/model declarations.
 - Added example workflows and an isolated persistent inference worker.
@@ -18,8 +31,19 @@ otherwise.
 
 ### Changed
 
+- PiD now reports a stock-ComfyUI update instruction when PixelDiT support is
+  missing instead of assuming the ComfyColab launcher.
+- Mage worker process cleanup supports Windows as well as POSIX process groups.
 - Declared the pinned ComfyUI-GGUF checkout's own `requirements.txt` for
   dependency-owned installation by the generic core runtime.
+- Standalone installation now refuses an incompatible existing ComfyUI-GGUF
+  checkout and verifies every isolated Mage worker package before reporting
+  readiness.
+
+### Validation
+
+- Discovered all 12 public nodes on stock ComfyUI 0.28.0 and completed live G4
+  Mage generation/editing plus PiD 4x and experimental native-tiled 16x runs.
 
 ### Required before the first runtime-installable release
 

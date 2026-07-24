@@ -1,0 +1,6 @@
+# Worker-only packages. install.py uses --target and --no-deps so these never
+# replace packages in the shared ComfyUI Python environment.
+accelerate==1.13.0
+diffusers==0.38.0
+loguru==0.7.3
+transformers==5.5.0

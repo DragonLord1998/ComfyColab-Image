@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "comfycolab-image-pack"
-version = "0.2.0-dev1"
-description = "Optional checksum-pinned image generation and editing nodes for ComfyColab."
+version = "0.3.0-dev1"
+description = "Standalone ComfyUI image generation, editing, Mage-Flow, and NVIDIA PiD nodes."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -13,6 +13,16 @@ authors = [
   { name = "ComfyColab contributors" },
 ]
 dependencies = []
+
+[project.urls]
+Repository = "https://github.com/DragonLord1998/ComfyColab-Image"
+Documentation = "https://github.com/DragonLord1998/ComfyColab-Image#readme"
+"Bug Tracker" = "https://github.com/DragonLord1998/ComfyColab-Image/issues"
+
+[tool.comfy]
+PublisherId = "dragonlord1998"
+DisplayName = "ComfyColab Image"
+requires-comfyui = ">=0.28.0"
 
 [tool.setuptools]
 packages = []

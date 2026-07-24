@@ -204,6 +204,14 @@ def _reader(stream, output: queue.Queue[str | None]) -> None:
 def _terminate_process(process: subprocess.Popen, timeout: float = 5.0) -> None:
     if process.poll() is not None:
         return
+    if os.name == "nt":
+        process.terminate()
+        try:
+            process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=timeout)
+        return
     try:
         os.killpg(process.pid, signal.SIGTERM)
         process.wait(timeout=timeout)
@@ -250,11 +258,20 @@ class MageFlowWorkerPool:
         *,
         popen_factory: Callable[..., subprocess.Popen] = subprocess.Popen,
         poll_interval: float = 0.1,
-        startup_timeout: float = 180.0,
+        startup_timeout: float | None = None,
     ) -> None:
         self._popen_factory = popen_factory
         self._poll_interval = poll_interval
-        self._startup_timeout = startup_timeout
+        self._startup_timeout = (
+            float(
+                os.environ.get(
+                    "COMFYCOLAB_MAGEFLOW_STARTUP_TIMEOUT_SECONDS",
+                    "1800",
+                )
+            )
+            if startup_timeout is None
+            else startup_timeout
+        )
         self._process = None
         self._lines: queue.Queue[str | None] = queue.Queue()
         self._reader_thread: threading.Thread | None = None
@@ -282,16 +299,19 @@ class MageFlowWorkerPool:
             env["PYTHONPATH"] = command.site_packages + (
                 os.pathsep + existing_pythonpath if existing_pythonpath else ""
             )
-        self._process = self._popen_factory(
-            argv,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
-            start_new_session=True,
-            env=env,
-        )
+        popen_options = {
+            "stdin": subprocess.PIPE,
+            "stdout": subprocess.PIPE,
+            "stderr": subprocess.STDOUT,
+            "text": True,
+            "bufsize": 1,
+            "env": env,
+        }
+        if os.name == "nt":
+            popen_options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        else:
+            popen_options["start_new_session"] = True
+        self._process = self._popen_factory(argv, **popen_options)
         if self._process.stdin is None or self._process.stdout is None:
             self.close()
             raise RuntimeError("MageFlow worker pipes are unavailable")

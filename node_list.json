@@ -1,0 +1,14 @@
+[
+  "ComfyColabZImageTurboBundleLoader",
+  "ComfyColabQwenImageEdit2511BundleLoader",
+  "ComfyColabKrea2BundleLoader",
+  "ComfyColabFlux2Klein4BBundleLoader",
+  "ComfyColabFlux2Klein9BBundleLoader",
+  "ComfyColabFlux2DevBundleLoader",
+  "ComfyColabMageFlow",
+  "ComfyColabMageFlowTurbo",
+  "ComfyColabMageFlowEdit",
+  "ComfyColabMageFlowEditTurbo",
+  "ComfyColabMageFlowEmptyLatent",
+  "ComfyColabPiDUpscale"
+]

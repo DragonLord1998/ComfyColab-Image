@@ -12,6 +12,7 @@ MAX_SEED = (2**63) - 1
 SCALE_OPTIONS = ["4x", "Experimental 16x (tiled)"]
 MAX_OUTPUT_4X = 4096
 MAX_OUTPUT_16X = 8192
+MIN_INPUT_16X = 256
 
 
 def _io():
@@ -29,9 +30,10 @@ def _require_upstream_nodes(vae_family: str) -> None:
     missing = sorted(required - set(registry))
     if missing:
         raise RuntimeError(
-            "ComfyColab PiD requires a pinned ComfyUI build with PixelDiT/PiD "
-            f"support. Missing node IDs: {', '.join(missing)}. Restart with "
-            "`comfycolab start --refresh`."
+            "ComfyColab PiD requires current ComfyUI PixelDiT/PiD support. "
+            f"Missing node IDs: {', '.join(missing)}. Update ComfyUI and restart. "
+            "Older managed ComfyColab runtimes can use `comfycolab start "
+            "--refresh` to apply the pinned compatibility patch."
         )
 
 
@@ -45,6 +47,13 @@ def _image_dimensions(image: Any) -> tuple[int, int]:
 
 
 def _validate_dimensions(width: int, height: int, scale: str) -> None:
+    if scale == "Experimental 16x (tiled)" and (
+        width < MIN_INPUT_16X or height < MIN_INPUT_16X
+    ):
+        raise ValueError(
+            "PiD experimental 16x requires at least a 256x256 input; smaller "
+            "sources compound generative artifacts across the two 4x passes."
+        )
     factor = 16 if scale == "Experimental 16x (tiled)" else 4
     cap = MAX_OUTPUT_16X if factor == 16 else MAX_OUTPUT_4X
     if width * factor > cap or height * factor > cap:
@@ -66,7 +75,7 @@ class ComfyColabPiDUpscale:
             description=(
                 "4x image upscale through NVIDIA PiD / PixelDiT with a selected "
                 "VAE. Experimental Mage-VAE bridges into FLUX.2 PiD; experimental "
-                "16x runs two 4x passes and tiles the second pass."
+                "16x runs two 4x passes and enables PiD's native NeRF-head tiling."
             ),
             enable_expand=True,
             inputs=[

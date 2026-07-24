@@ -24,6 +24,41 @@ def load_worker():
 
 
 class WorkerRuntimeTests(unittest.TestCase):
+    def test_default_startup_timeout_allows_first_run_model_downloads(self):
+        worker_module_path = (
+            ROOT
+            / "custom_nodes"
+            / "ComfyColab-MageFlow"
+            / "mage_flow_worker.py"
+        )
+        name = "comfycolab_mageflow_timeout_test"
+        spec = importlib.util.spec_from_file_location(name, worker_module_path)
+        protocol = importlib.util.module_from_spec(spec)
+        sys.modules[name] = protocol
+        assert spec.loader
+        spec.loader.exec_module(protocol)
+        self.assertEqual(protocol.MageFlowWorkerPool()._startup_timeout, 1800.0)
+
+    def test_windows_worker_shutdown_uses_process_methods(self):
+        worker_module_path = (
+            ROOT
+            / "custom_nodes"
+            / "ComfyColab-MageFlow"
+            / "mage_flow_worker.py"
+        )
+        name = "comfycolab_mageflow_windows_test"
+        spec = importlib.util.spec_from_file_location(name, worker_module_path)
+        protocol = importlib.util.module_from_spec(spec)
+        sys.modules[name] = protocol
+        assert spec.loader
+        spec.loader.exec_module(protocol)
+        process = mock.Mock()
+        process.poll.return_value = None
+        with mock.patch.object(protocol.os, "name", "nt"):
+            protocol._terminate_process(process)
+        process.terminate.assert_called_once_with()
+        process.wait.assert_called_once()
+
     def test_native_sampler_request_requires_prompt_and_sigma_per_batch(self):
         worker_module_path = ROOT / "custom_nodes" / "ComfyColab-MageFlow" / "mage_flow_worker.py"
         name = "comfycolab_mageflow_protocol_test"

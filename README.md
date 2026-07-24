@@ -1,16 +1,10 @@
 # ComfyColab Image
 
-ComfyColab Image is the optional image-generation and image-editing pack for
-[ComfyColab](https://github.com/DragonLord1998/ComfyColab). It is intentionally
-separate from the ComfyUI-on-Colab engine so image models, licenses, catalogs,
-and optimizations can evolve on their own release cadence.
-
-> Development staging status: the source, manifest, hooks, and offline contract
-> suite are complete. The v1 manifest explicitly directs the generic core
-> runtime to install `requirements.txt` from the pinned ComfyUI-GGUF checkout.
-> A runtime-installable release still requires an immutable daughter commit in
-> the official core registry, an exact generated lock, and a clean live Colab
-> install, startup, and inference run against that lock.
+ComfyColab Image is a standalone ComfyUI custom-node pack for image generation,
+editing, Mage-Flow, and NVIDIA PiD upscaling. It can be cloned directly into a
+normal ComfyUI installation; the managed
+[ComfyColab](https://github.com/DragonLord1998/ComfyColab) runtime remains an
+additional supported installation path.
 
 The first modular release preserves the legacy internal node-root name
 `custom_nodes/ComfyColab-ZImage` and all existing public node IDs:
@@ -52,12 +46,52 @@ The pack also provides one NVIDIA PiD facade:
 It accepts any ComfyUI image, lets the user choose a matched FLUX.1, FLUX.2,
 or Qwen Image VAE family, and returns a native 4x PiD upscale. It also exposes
 an experimental Mage-VAE bridge through the FLUX.2 PiD checkpoint.
-Experimental 16x mode cascades two 4x passes and uses tiled VAE encoding plus
-overlapped context-window sampling on the second pass. See
+Experimental 16x mode cascades two 4x passes and uses PiD's native Chroma
+Radiance NeRF-head tiling on the second pass. Standard
+FLUX/Qwen VAE inputs use the normal encoder; the experimental Mage-VAE bridge
+retains its own overlap-blended encoder. See
 [`docs/pid-upscaler.md`](docs/pid-upscaler.md); the NVIDIA noncommercial model
 license must be explicitly accepted in the node before assets are downloaded.
 
-## Installation after publication
+## Standalone installation
+
+### ComfyUI Manager
+
+Install `ComfyColab-Image` from its Git URL. Manager clones the repository,
+runs the lightweight shared requirements step, and then runs `install.py`.
+Restart ComfyUI after installation.
+
+### Manual
+
+From the ComfyUI directory:
+
+```bash
+cd custom_nodes
+git clone https://github.com/DragonLord1998/ComfyColab-Image.git
+cd ComfyColab-Image
+python install.py
+```
+
+Use the same Python executable that starts ComfyUI. Portable Windows users
+should run the embedded Python executable instead of a system Python. Restart
+ComfyUI after the installer completes.
+
+The installer:
+
+- keeps Mage's `transformers`, `diffusers`, `accelerate`, and `loguru` versions
+  in a private worker-only target;
+- downloads the exact Microsoft Mage source archive and verifies its SHA-256;
+- installs the pinned ComfyUI-GGUF dependency as a sibling custom node when it
+  is not already present;
+- never downloads model weights during installation.
+
+Mage and PiD model weights remain lazy, checksum/revision-pinned downloads.
+PiD requires current ComfyUI PixelDiT support. Older stock ComfyUI installations
+must be updated; the standalone installer does not modify ComfyUI source files.
+See [`docs/standalone-install.md`](docs/standalone-install.md) for diagnostics
+and platform boundaries.
+
+## Managed ComfyColab installation
 
 After an immutable daughter commit is added to the official core registry and
 the resulting lock passes live validation, the supported installation path
@@ -95,5 +129,5 @@ Neither command proves live GPU inference or output quality; that requires a
 separate Colab smoke run.
 
 Four Mage-Flow workflows and one PiD upscaler workflow are included under
-`workflows/`. Local tests cover their graph contracts, but live GPU inference
-remains a separate release gate.
+`workflows/`. Local tests cover their graph contracts; standalone GPU inference
+is validated separately on a clean stock-ComfyUI runtime.

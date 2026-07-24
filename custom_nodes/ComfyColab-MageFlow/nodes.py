@@ -19,7 +19,6 @@ from .mage_flow_worker import (
 
 
 MAGE_FLOW_SOURCE_REF = "1c4727a6daea1200488d9c68544ebea2e784c765"
-MAGE_FLOW_SOURCE_REPOSITORY = "https://github.com/microsoft/Mage.git"
 MAGE_FLOW_MODELS = {
     "flow": {
         "model_id": "microsoft/Mage-Flow",
@@ -79,32 +78,17 @@ def _source_dir() -> Path:
     )
     candidates = [Path(configured)] if configured else []
     candidates.append(_repo_root() / "repositories" / "Mage-Flow")
-    target = _runtime_root() / "source" / "Mage"
-    candidates.append(target)
+    candidates.append(
+        _repo_root() / ".standalone" / "mage" / "source" / "Mage"
+    )
     for candidate in candidates:
         if (candidate / "mage_flow" / "pipeline.py").is_file():
             return candidate
-
-    with _WORKER_DEPENDENCY_LOCK:
-        if not (target / ".git").is_dir():
-            target.parent.mkdir(parents=True, exist_ok=True)
-            subprocess.check_call(
-                ["git", "clone", "--filter=blob:none", MAGE_FLOW_SOURCE_REPOSITORY, str(target)]
-            )
-        subprocess.check_call(
-            ["git", "-C", str(target), "fetch", "origin", MAGE_FLOW_SOURCE_REF, "--depth", "1"]
-        )
-        subprocess.check_call(
-            ["git", "-C", str(target), "checkout", "--detach", "FETCH_HEAD"]
-        )
-        actual = subprocess.check_output(
-            ["git", "-C", str(target), "rev-parse", "HEAD"], text=True
-        ).strip()
-        if actual != MAGE_FLOW_SOURCE_REF:
-            raise RuntimeError(
-                f"Mage-Flow source revision mismatch: expected {MAGE_FLOW_SOURCE_REF}, got {actual}"
-            )
-    return target
+    raise RuntimeError(
+        "Mage-Flow standalone dependencies are not installed. Run "
+        f"`{sys.executable} {_repo_root() / 'install.py'}` from the "
+        "ComfyColab-Image custom-node directory, then restart ComfyUI."
+    )
 
 
 def _worker_script() -> Path:
@@ -132,6 +116,28 @@ def _worker_site_packages() -> str:
     ):
         return ""
 
+    standalone_target = (
+        _repo_root() / ".standalone" / "mage" / "python-packages"
+    )
+    if all(
+        (standalone_target / module / "__init__.py").is_file()
+        for module in ("accelerate", "diffusers", "loguru", "transformers")
+    ):
+        return str(standalone_target)
+
+    if not (
+        os.environ.get("COMFYCOLAB_MAGEFLOW_SOURCE")
+        or os.environ.get("COMFYCOLAB_MAGE_FLOW_SOURCE_DIR")
+    ):
+        raise RuntimeError(
+            "Mage-Flow worker dependencies are not installed. Run "
+            f"`{sys.executable} {_repo_root() / 'install.py'}` from the "
+            "ComfyColab-Image custom-node directory, then restart ComfyUI."
+        )
+
+    # Managed ComfyColab runtimes retain their resolver-owned compatibility
+    # path. Direct custom-node installs are provisioned by install.py and never
+    # enter this branch.
     target = _runtime_root() / "python-packages"
     marker = target / ".comfycolab-mageflow-requirements.json"
     expected = {
