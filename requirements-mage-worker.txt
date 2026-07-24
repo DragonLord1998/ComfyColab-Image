@@ -2,7 +2,7 @@
 # replace packages in the shared ComfyUI Python environment.
 accelerate==1.13.0
 diffusers==0.38.0
-huggingface_hub[hf_xet]>=0.36.0,<1
+huggingface_hub[hf_xet]>=0.36.0,<2
 hf-xet>=1.1.0
 loguru==0.7.3
 transformers==5.5.0
