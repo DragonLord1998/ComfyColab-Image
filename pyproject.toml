@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "comfycolab-image-pack"
-version = "0.3.0-dev1"
+version = "0.3.1-dev1"
 description = "Standalone ComfyUI image generation, editing, Mage-Flow, and NVIDIA PiD nodes."
 readme = "README.md"
 requires-python = ">=3.10"
