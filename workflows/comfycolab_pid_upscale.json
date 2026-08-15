@@ -34,7 +34,7 @@
       "id": 2,
       "type": "ComfyColabPiDUpscale",
       "pos": [40, 120],
-      "size": [360, 410],
+      "size": [360, 450],
       "flags": {},
       "order": 1,
       "mode": 0,
@@ -57,6 +57,14 @@
           "type": "STRING",
           "widget": {
             "name": "prompt"
+          },
+          "link": null
+        },
+        {
+          "name": "enhance_prompt_with_qwen",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "enhance_prompt_with_qwen"
           },
           "link": null
         },
@@ -123,6 +131,12 @@
           "type": "IMAGE",
           "slot_index": 0,
           "links": [2]
+        },
+        {
+          "name": "enhanced_prompt",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": null
         }
       ],
       "properties": {
@@ -131,6 +145,7 @@
       "widgets_values": [
         "FLUX.2",
         "high fidelity detailed product photo upscale with clean textures",
+        true,
         "4x",
         12345,
         0.0,

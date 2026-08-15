@@ -7,9 +7,6 @@ from .catalog import MAGE_VAE_EXPERIMENTAL
 
 
 SIGMAS = "0.999,0.866,0.634,0.342,0"
-ZIMAGE_DENOISE = 0.33
-ZIMAGE_STEPS = 5
-ZIMAGE_QUANTIZATION = "Q4_K_M"
 LATENT_FORMATS = {
     "FLUX.1": "flux",
     "FLUX.2": "flux",
@@ -25,20 +22,15 @@ REQUIRED_NODES = frozenset(
         "CLIPTextEncode",
         "VAELoader",
         "VAEEncode",
-        "VAEEncodeTiled",
         "PiDConditioning",
         "EmptyChromaRadianceLatentImage",
         "KSamplerSelect",
         "ManualSigmas",
         "SamplerCustom",
         "VAEDecode",
-        "VAEDecodeTiled",
         "ImageScale",
         "SplitImageToTileList",
         "ImageMergeTileList",
-        "ComfyColabZImageTurboBundleLoader",
-        "ModelSamplingAuraFlow",
-        "KSampler",
     }
 )
 MAGE_REQUIRED_NODES = frozenset({"ComfyColabMageVAEEncode"})
@@ -48,9 +40,9 @@ def _builder():
     return importlib.import_module("comfy_execution.graph_utils").GraphBuilder()
 
 
-def _finish(graph, image):
+def _finish(graph, image, prompt: str):
     io = importlib.import_module("comfy_api.latest").io
-    return io.NodeOutput(image, expand=graph.finalize())
+    return io.NodeOutput(image, prompt, expand=graph.finalize())
 
 
 def _aligned(value: int, multiple: int = 16) -> int:
@@ -70,7 +62,6 @@ def build_pid_graph(
     tile_overlap: int,
     vae_family: str,
     model_names: dict[str, str],
-    force_redownload: bool = False,
 ):
     graph = _builder()
     model = graph.node(
@@ -156,18 +147,7 @@ def build_pid_graph(
     if (generated_width, generated_height) != (exact_width, exact_height):
         raise RuntimeError("Internal PiD scale mapping produced the wrong dimensions.")
 
-    cleaned = _tiled_zimage_cleanup(
-        graph,
-        image=generated,
-        prompt=prompt,
-        width=exact_width,
-        height=exact_height,
-        seed=seed,
-        tile_size=tile_size,
-        tile_overlap=tile_overlap,
-        force_redownload=force_redownload,
-    )
-    return _finish(graph, cleaned)
+    return _finish(graph, generated, prompt)
 
 
 def _tiled_pid_stage(
@@ -245,105 +225,6 @@ def _tiled_pid_stage(
         final_width=width * output_factor,
         final_height=height * output_factor,
         overlap=source_overlap * output_factor,
-    ).out(0)
-
-
-def _tiled_zimage_cleanup(
-    graph: Any,
-    *,
-    image: Any,
-    prompt: str,
-    width: int,
-    height: int,
-    seed: int,
-    tile_size: int,
-    tile_overlap: int,
-    force_redownload: bool,
-):
-    bundle = graph.node(
-        "ComfyColabZImageTurboBundleLoader",
-        quantization=ZIMAGE_QUANTIZATION,
-        force_redownload=force_redownload,
-    )
-    model = graph.node("ModelSamplingAuraFlow", model=bundle.out(0), shift=3.0)
-    positive = graph.node(
-        "CLIPTextEncode",
-        clip=bundle.out(1),
-        text=(
-            f"{prompt}. Preserve the source composition and identity; remove only "
-            "upscale artifacts, ringing, seams, and compression noise."
-        ),
-    )
-    negative = graph.node("CLIPTextEncode", clip=bundle.out(1), text="")
-    split = graph.node(
-        "SplitImageToTileList",
-        image=image,
-        tile_width=tile_size,
-        tile_height=tile_size,
-        overlap=tile_overlap,
-    )
-    source_tile_width = min(width, tile_size)
-    source_tile_height = min(height, tile_size)
-    work_tile_width = _aligned(source_tile_width, 8)
-    work_tile_height = _aligned(source_tile_height, 8)
-    cleanup_tiles = split.out(0)
-    if (work_tile_width, work_tile_height) != (
-        source_tile_width,
-        source_tile_height,
-    ):
-        cleanup_tiles = graph.node(
-            "ImageScale",
-            image=cleanup_tiles,
-            upscale_method="lanczos",
-            width=work_tile_width,
-            height=work_tile_height,
-            crop="disabled",
-        ).out(0)
-    encoded = graph.node(
-        "VAEEncodeTiled",
-        pixels=cleanup_tiles,
-        vae=bundle.out(2),
-        tile_size=tile_size,
-        overlap=tile_overlap,
-    )
-    sampled = graph.node(
-        "KSampler",
-        model=model.out(0),
-        seed=(seed + 1_000_000) % (2**63),
-        steps=ZIMAGE_STEPS,
-        cfg=1.0,
-        sampler_name="dpmpp_2m_sde",
-        scheduler="beta",
-        positive=positive.out(0),
-        negative=negative.out(0),
-        latent_image=encoded.out(0),
-        denoise=ZIMAGE_DENOISE,
-    )
-    decoded = graph.node(
-        "VAEDecodeTiled",
-        samples=sampled.out(0),
-        vae=bundle.out(2),
-        tile_size=tile_size,
-        overlap=tile_overlap,
-    ).out(0)
-    if (work_tile_width, work_tile_height) != (
-        source_tile_width,
-        source_tile_height,
-    ):
-        decoded = graph.node(
-            "ImageScale",
-            image=decoded,
-            upscale_method="lanczos",
-            width=source_tile_width,
-            height=source_tile_height,
-            crop="disabled",
-        ).out(0)
-    return graph.node(
-        "ImageMergeTileList",
-        image_list=decoded,
-        final_width=width,
-        final_height=height,
-        overlap=tile_overlap,
     ).out(0)
 
 
