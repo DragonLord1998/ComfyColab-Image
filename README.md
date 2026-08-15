@@ -43,13 +43,12 @@ The pack also provides one NVIDIA PiD facade:
 
 - `ComfyColabPiDUpscale`
 
-It accepts any ComfyUI image, lets the user choose a matched FLUX.1, FLUX.2,
-or Qwen Image VAE family, and returns a native 4x PiD upscale. It also exposes
-an experimental Mage-VAE bridge through the FLUX.2 PiD checkpoint.
-Experimental 16x mode cascades two 4x passes and uses PiD's native Chroma
-Radiance NeRF-head tiling on the second pass. Standard
-FLUX/Qwen VAE inputs use the normal encoder; the experimental Mage-VAE bridge
-retains its own overlap-blended encoder. See
+It accepts any ComfyUI image and exposes tiled `2x`, `4x`, `8x`, and `16x`
+upscaling. FLUX.2 is the default PiD VAE; matched FLUX.1 and Qwen Image options
+and an experimental Mage-VAE bridge are also available. PiD runs on bounded,
+overlapping source tiles and finishes with a light tiled Z-Image Turbo cleanup
+pass. The former 4096/8192-pixel facade caps are removed; the pinned ComfyUI
+tile merger supports a final canvas up to 32768 px per side. See
 [`docs/pid-upscaler.md`](docs/pid-upscaler.md); the NVIDIA noncommercial model
 license must be explicitly accepted in the node before assets are downloaded.
 
