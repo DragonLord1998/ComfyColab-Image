@@ -4,15 +4,13 @@ import importlib
 from typing import Any
 
 from .catalog import MAGE_VAE_EXPERIMENTAL, backbone_names
-from .graph import MAGE_REQUIRED_NODES, REQUIRED_NODES, build_pid_graph
+from .graph import MAGE_REQUIRED_NODES, REQUIRED_NODES, SCALE_FACTORS, build_pid_graph
 from .models import ensure_pid_assets
 
 
 MAX_SEED = (2**63) - 1
-SCALE_OPTIONS = ["4x", "Experimental 16x (tiled)"]
-MAX_OUTPUT_4X = 4096
-MAX_OUTPUT_16X = 8192
-MIN_INPUT_16X = 256
+MAX_MERGED_DIMENSION = 32768
+SCALE_OPTIONS = ["2x", "4x", "8x", "16x"]
 
 
 def _io():
@@ -30,10 +28,9 @@ def _require_upstream_nodes(vae_family: str) -> None:
     missing = sorted(required - set(registry))
     if missing:
         raise RuntimeError(
-            "ComfyColab PiD requires current ComfyUI PixelDiT/PiD support. "
-            f"Missing node IDs: {', '.join(missing)}. Update ComfyUI and restart. "
-            "Older managed ComfyColab runtimes can use `comfycolab start "
-            "--refresh` to apply the pinned compatibility patch."
+            "ComfyColab PiD requires a pinned ComfyUI build with PixelDiT/PiD "
+            f"support. Missing node IDs: {', '.join(missing)}. Restart with "
+            "`comfycolab start --refresh`."
         )
 
 
@@ -46,21 +43,15 @@ def _image_dimensions(image: Any) -> tuple[int, int]:
     return int(shape[2]), int(shape[1])
 
 
-def _validate_dimensions(width: int, height: int, scale: str) -> None:
-    if scale == "Experimental 16x (tiled)" and (
-        width < MIN_INPUT_16X or height < MIN_INPUT_16X
-    ):
+def _validate_output_dimensions(width: int, height: int, scale: str) -> None:
+    factor = SCALE_FACTORS[scale]
+    output_width = width * factor
+    output_height = height * factor
+    if output_width > MAX_MERGED_DIMENSION or output_height > MAX_MERGED_DIMENSION:
         raise ValueError(
-            "PiD experimental 16x requires at least a 256x256 input; smaller "
-            "sources compound generative artifacts across the two 4x passes."
-        )
-    factor = 16 if scale == "Experimental 16x (tiled)" else 4
-    cap = MAX_OUTPUT_16X if factor == 16 else MAX_OUTPUT_4X
-    if width * factor > cap or height * factor > cap:
-        raise ValueError(
-            f"PiD {scale} output is capped at {cap}px per side in this facade; "
-            f"received {width}x{height}, which would output "
-            f"{width * factor}x{height * factor}."
+            f"PiD {scale} would produce {output_width}x{output_height}, but the "
+            "pinned ComfyUI ImageMergeTileList node supports at most "
+            f"{MAX_MERGED_DIMENSION}px per side. Reduce the input size or scale."
         )
 
 
@@ -73,9 +64,8 @@ class ComfyColabPiDUpscale:
             display_name="ComfyColab PiD — Image Upscaler",
             category="ComfyColab/Image",
             description=(
-                "4x image upscale through NVIDIA PiD / PixelDiT with a selected "
-                "VAE. Experimental Mage-VAE bridges into FLUX.2 PiD; experimental "
-                "16x runs two 4x passes and enables PiD's native NeRF-head tiling."
+                "Tiled 2x/4x/8x/16x image upscale through NVIDIA PiD / PixelDiT, "
+                "followed by a light tiled Z-Image Turbo artifact-cleanup pass."
             ),
             enable_expand=True,
             inputs=[
@@ -83,7 +73,7 @@ class ComfyColabPiDUpscale:
                 io.Combo.Input(
                     "vae_family",
                     options=backbone_names(),
-                    default="FLUX.1",
+                    default="FLUX.2",
                     tooltip=(
                         "Selects the PiD checkpoint and VAE family. Mage-VAE is an "
                         "experimental bridge through the FLUX.2 PiD checkpoint."
@@ -142,7 +132,7 @@ class ComfyColabPiDUpscale:
     def execute(
         cls,
         image,
-        vae_family="FLUX.1",
+        vae_family="FLUX.2",
         prompt="high fidelity detailed image upscale",
         scale="4x",
         seed=0,
@@ -161,7 +151,7 @@ class ComfyColabPiDUpscale:
         if vae_family not in backbone_names():
             raise ValueError(f"Unknown PiD VAE family: {vae_family}.")
         if scale not in SCALE_OPTIONS:
-            raise ValueError("PiD scale must be 4x or Experimental 16x (tiled).")
+            raise ValueError("PiD scale must be one of 2x, 4x, 8x, or 16x.")
         seed = int(seed)
         degrade_sigma = float(degrade_sigma)
         tile_size = int(tile_size)
@@ -173,7 +163,7 @@ class ComfyColabPiDUpscale:
         if tile_overlap >= tile_size:
             raise ValueError("tile_overlap must be smaller than tile_size.")
         width, height = _image_dimensions(image)
-        _validate_dimensions(width, height, scale)
+        _validate_output_dimensions(width, height, scale)
         _require_upstream_nodes(vae_family)
         model_names = ensure_pid_assets(
             vae_family,
@@ -191,6 +181,7 @@ class ComfyColabPiDUpscale:
             tile_overlap=tile_overlap,
             vae_family=vae_family,
             model_names=model_names,
+            force_redownload=bool(force_redownload),
         )
 
 
