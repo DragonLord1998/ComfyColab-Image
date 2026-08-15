@@ -41,7 +41,10 @@ class PiDWorkflowTests(unittest.TestCase):
         save_image = next(
             node for node in self.nodes.values() if node["type"] == "SaveImage"
         )
-        self.assertEqual([output["type"] for output in facade["outputs"]], ["IMAGE"])
+        self.assertEqual(
+            [output["type"] for output in facade["outputs"]],
+            ["IMAGE", "STRING"],
+        )
 
         image_input = next(item for item in facade["inputs"] if item["name"] == "image")
         save_input = next(item for item in save_image["inputs"] if item["name"] == "images")
@@ -64,6 +67,7 @@ class PiDWorkflowTests(unittest.TestCase):
                 "image",
                 "vae_family",
                 "prompt",
+                "enhance_prompt_with_qwen",
                 "scale",
                 "seed",
                 "degrade_sigma",
@@ -83,6 +87,7 @@ class PiDWorkflowTests(unittest.TestCase):
         self.assertIn("384", normalized)
         self.assertIn(0.0, values)
         self.assertIn(False, values)
+        self.assertIn(True, values)
         self.assertTrue(
             any(
                 isinstance(value, str)

@@ -3,7 +3,7 @@
 `ComfyColab PiD — Image Upscaler` wraps the native NVIDIA PiD support in the
 pinned ComfyUI build. It accepts a ComfyUI `IMAGE`, downloads the selected
 compatible VAE, PiD decoder, and PixelDiT text encoder on first use, and returns
-an `IMAGE`.
+an `IMAGE` plus the exact `STRING` prompt used for PiD conditioning.
 
 ## Inputs
 
@@ -15,11 +15,15 @@ an `IMAGE`.
   128-channel, 16x-downsampled latent to the FLUX.2 PiD checkpoint.
 - `prompt`: a short description of the source image. PiD uses it while
   synthesizing high-resolution detail.
+- `enhance_prompt_with_qwen`: enabled by default. The Video pack's pinned
+  Qwen3.8-27B Q4_K_M vision runtime inspects the first image with thinking,
+  writes a detailed preservation prompt, then exits before PiD allocation.
+  Disable it to use `prompt` unchanged.
 - `scale`: `2x`, `4x`, `8x`, or `16x`.
 - `seed` and `degrade_sigma`: PiD sampling controls. Keep `degrade_sigma=0`
   for a clean source image.
-- `tile_size` and `tile_overlap`: control both the bounded PiD output tiles and
-  the final Z-Image Turbo cleanup tiles.
+- `tile_size` and `tile_overlap`: control the bounded PiD output tiles and
+  feathered merge.
 - `accept_nvidia_noncommercial_license`: must be enabled before the node
   downloads or runs the NVIDIA PiD weights.
 
@@ -32,12 +36,9 @@ native PiD pass; `8x` and `16x` use two tiled 4x passes. The `2x` and `8x`
 paths Lanczos-reduce each native PiD tile before merging, so they never assemble
 an unnecessary full 4x or 16x intermediate canvas.
 
-After the requested size is reached, the node splits the image into a second
-tile list and applies a deliberately light Z-Image Turbo image-to-image pass:
-AuraFlow shift 3, 5 steps, CFG 1, `dpmpp_2m_sde`, `beta`, and denoise 0.33.
-This pass is intended to remove seams, ringing, and compression artifacts
-without redesigning the source. Z-Image uses its own matched VAE for cleanup;
-the default PiD conditioning VAE remains FLUX.2.
+After the requested size is reached, the node returns the raw feathered PiD
+tile merge. The former Z-Image Turbo touch-up pass is disabled and no Z-Image
+loader, sampler, or VAE node is added to the expanded PiD graph.
 
 The old facade caps of 4096 px for 4x and 8192 px for 16x are removed. Each PiD
 latent stays tile-sized; only the merged output image occupies the final canvas.
